@@ -272,7 +272,6 @@ public class HUD
 		renderer.draw("Quadtree Render: " + TimeQuery.getCache()[Scene.frameIndex][TimeQuery.TERRAIN_ID], 40, y - 460);
 		renderer.draw("Banana Render: " + TimeQuery.getCache()[Scene.frameIndex][TimeQuery.ITEM_ID], 40, y - 490);
 		renderer.draw("Occlusion: " + (Scene.enableOcclusion ? "Enabled" : "Disabled"), 40, y - 520);
-		renderer.draw("Light: " + scene.lightID, 40, y - 550);
 		
 		Vec3 p = car.getPosition();
 		

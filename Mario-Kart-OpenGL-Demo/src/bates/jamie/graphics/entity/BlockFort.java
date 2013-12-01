@@ -89,7 +89,7 @@ public class BlockFort
 		
 		if(renderMode == 2) gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
 		
-		Shader shader = Scene.singleton.singleLight ? Shader.get("phong_shadow") : Shader.get("shadow_lights");
+		Shader shader = Shader.get("phong_shadow");
 		if(shader != null)
 		{
 			shader.enable(gl);
@@ -110,11 +110,13 @@ public class BlockFort
 			
 			if(shader != null)
 			{
+				shader.setUniform(gl, "factor", Scene.attenuation);
+				
 				float[] model = Arrays.copyOf(Matrix.IDENTITY_MATRIX_16, 16);
 				Matrix.translate(model, 90, 30, 90);
 				Matrix.scale    (model, 30, 30, 30);
 				
-				shader.loadModelMatrix(gl, model);
+				shader.loadMatrix(gl, model);
 				//TODO seems to generate "OpenGL Error: invalid operation" for unknown reason
 			}
 
@@ -138,7 +140,7 @@ public class BlockFort
 				float[] rotation = Matrix.getRotationMatrix(Matrix.getRotationMatrix(0, -90, 0));
 				Matrix.multiply(model, model, rotation);
 				
-				shader.loadModelMatrix(gl, model);
+				shader.loadMatrix(gl, model);
 			}
 
 			if(renderMode == 1) displayWireframeObject(gl, FORT_FACES, RGB.BLACK_3F);
@@ -161,7 +163,7 @@ public class BlockFort
 				Matrix.multiply(model, model, rotation);
 				Matrix.scale(model, 30, 30, 30);
 				
-				shader.loadModelMatrix(gl, model);
+				shader.loadMatrix(gl, model);
 			}
 
 			if(renderMode == 1) displayWireframeObject(gl, FORT_FACES, RGB.BLACK_3F);
@@ -184,7 +186,7 @@ public class BlockFort
 				float[] rotation = Matrix.getRotationMatrix(Matrix.getRotationMatrix(0, -270, 0));
 				Matrix.multiply(model, model, rotation);
 				
-				shader.loadModelMatrix(gl, model);
+				shader.loadMatrix(gl, model);
 			}
 
 			if(renderMode == 1) displayWireframeObject(gl, FORT_FACES, RGB.BLACK_3F);

@@ -1,37 +1,24 @@
-#extension GL_ARB_gpu_shader5 : enable
+const float Eta = 0.66;
+const float FresnelPower = 5.0;
+const float F = ((1.0 - Eta) * (1.0 - Eta)) / ((1.0 + Eta) * (1.0 + Eta));
 
-const float ETA = 0.97;
-const float FRESNEL_POWER = 5.0;
-const float REFLECTANCE = ((1.0 - ETA) * (1.0 - ETA)) / ((1.0 + ETA) * (1.0 + ETA));
+varying vec3 Reflect;
+varying vec3 Refract;
 
-varying vec3 reflectDir;
-varying vec3 refractDir;
-
-varying float ratio;
-
-uniform mat4 cameraMatrix;
-
-uniform float eta;
-uniform float reflectance;
-
+varying float Ratio;
 
 void main()
 {
-	vec4 vertex = gl_ModelViewMatrix * gl_Vertex;
-	vec3 position = (vertex / vertex.w).xyz;
+	vec4 ecPosition = gl_ModelViewMatrix * gl_Vertex;
+	vec3 ecPosition3 = ecPosition.xyz / ecPosition.w;
 	
-	vec3 eyeDir = normalize(vertex.xyz);
-	vec3 vertexNormal = normalize(gl_NormalMatrix * gl_Normal);
+	vec3 i = normalize(ecPosition3);
+	vec3 n = normalize(gl_NormalMatrix * gl_Normal);
 	
-	ratio = reflectance + (1.0 - reflectance) * pow((1.0 - dot(-eyeDir, vertexNormal)), FRESNEL_POWER);
+	Ratio = F + (1.0 - F) * pow((1.0 - dot(-i, n)), FresnelPower);
 	
-	vec4 coord = vec4(reflect(eyeDir, vertexNormal), 1.0);
-    coord = inverse(cameraMatrix) * coord;
-    reflectDir = normalize(coord.xyz);
-    
-    coord = vec4(refract(eyeDir, vertexNormal, eta), 1.0);
-    coord = inverse(cameraMatrix) * coord;
-    refractDir = normalize(coord.xyz);
+	Refract = refract(i, n, Eta);
+	Reflect = reflect(i, n);
 
 	gl_Position = ftransform();
 }

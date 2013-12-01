@@ -137,7 +137,7 @@ public class ParticleGenerator
 		
 		for(int i = 0; i < n; i++)
 		{	
-			float rotation = -30 + generator.nextInt(60);
+			float rotation = -45 + generator.nextInt(90);
 			
 			particles.add(new DriftParticle(source, rotation, color, generator.nextBoolean(), miniature));
 		}

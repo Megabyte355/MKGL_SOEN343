@@ -4,13 +4,11 @@ import static javax.media.opengl.GL.GL_BLEND;
 import static javax.media.opengl.fixedfunc.GLLightingFunc.GL_LIGHTING;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.media.opengl.GL2;
 
 import bates.jamie.graphics.util.Face;
-import bates.jamie.graphics.util.Matrix;
 import bates.jamie.graphics.util.Renderer;
 import bates.jamie.graphics.util.Shader;
 import bates.jamie.graphics.util.Vec3;
@@ -38,6 +36,8 @@ public class SceneNode
 	private Material material;
 	private Reflector reflector;
 	
+	private boolean enableBloom = false;
+	
 	public SceneNode(List<Face> geometry, int displayList, Model model, MatrixOrder order, Material material)
 	{
 		children = new ArrayList<SceneNode>();
@@ -61,59 +61,53 @@ public class SceneNode
 			if(material != null) material.load(gl);
 			gl.glColor3fv(color, 0);
 			
-			switch(renderMode)
-			{
-				case TEXTURE:
-				{
-					Shader shader = Shader.enabled ? (Scene.singleton.singleLight ? Shader.get("phong_texture") : Shader.get("texture_lights")) : null;
-					if(shader != null)
-					{
-						shader.enable(gl);
-						shader.setSampler(gl, "texture", 0);
-					}
-					break;      
-				}
-				case COLOR  :
-				{
-					Shader shader = Shader.enabled ? (Scene.singleton.singleLight ? Shader.get("phong") : Shader.get("phong_lights")) : null;
-					if(shader != null) shader.enable(gl);
-					break;
-				}
-				case REFLECT:
-				{
-					Shader shader = Shader.enabled ? (Scene.singleton.singleLight ? Shader.get("phong_cube") : Shader.get("cube_lights")) : null;
-					if(shader != null)
-					{
-						shader.enable(gl);
-						shader.setSampler(gl, "cubeMap", 0);
-						shader.setUniform(gl, "shininess", reflector.reflectivity);
-						
-						float[] camera = Scene.singleton.getCars().get(0).camera.getMatrix();
-						shader.loadMatrix(gl, "cameraMatrix", camera);
-					}
-					break;      
-				}
-				case GLASS  : break;
-			}
-			
-			int[] attachments = {GL2.GL_COLOR_ATTACHMENT0, GL2.GL_COLOR_ATTACHMENT1};
-			if(!Scene.reflectMode && Scene.singleton.enableBloom && renderMode != RenderMode.GLASS) gl.glDrawBuffers(2, attachments, 0);
-			
 			if(model != null)
-			{
+			{	
 				switch(renderMode)
 				{
-					case TEXTURE: 
-					case COLOR  : model.render(gl); break;
+					case TEXTURE:
+					{
+						Shader shader = Shader.enabled ? Shader.get("phong_texture") : null;
+						if(shader != null)
+						{
+							shader.enable(gl);
+							shader.setSampler(gl, "texture", 0);
+						}
+						model.render(gl); break;      
+					}
+					case COLOR  :
+					{
+						Shader shader = Shader.enabled ? Shader.get("phong") : null;
+						if(shader != null) shader.enable(gl); model.render(gl);
+						break;
+					}
 					case REFLECT:
 					{
+						int[] attachments = {GL2.GL_COLOR_ATTACHMENT0, GL2.GL_COLOR_ATTACHMENT1};
+						if(!Scene.reflectMode && enableBloom) gl.glDrawBuffers(2, attachments, 0);
+						
+						Shader shader = Shader.enabled ? Shader.get("phong_cube") : null;
+						if(shader != null)
+						{
+							shader.enable(gl);
+							shader.setSampler(gl, "cubeMap", 0);
+							shader.setUniform(gl, "shininess", reflector.reflectivity);
+						}
+						
 						if(reflector != null) reflector.enable(gl);
-						model.render(gl);
+						{
+							model.render(gl);
+						}
 						if(reflector != null) reflector.disable(gl);
-						break;
+						
+						if(!Scene.reflectMode && enableBloom) gl.glDrawBuffers(1, attachments, 0);
+						
+						break;      
 					}
 					case GLASS  : model.renderGlass(gl, color); break;
 				}
+				
+				Shader.disable(gl);
 			}
 			else if(displayList != -1) gl.glCallList(displayList);
 			else
@@ -127,14 +121,11 @@ public class SceneNode
 				}
 			}
 			
-			if(!Scene.reflectMode && Scene.singleton.enableBloom && renderMode != RenderMode.GLASS) gl.glDrawBuffers(1, attachments, 0);
-			Shader.disable(gl);
-			
 			for(SceneNode child : children) child.render(gl);
 		}
 		gl.glPopMatrix();
 	}
-
+	
 	public void renderGhost(GL2 gl, float fade, Shader shader)
 	{
 		gl.glPushMatrix();
@@ -145,15 +136,15 @@ public class SceneNode
 			{
 				shader.enable(gl);
 				shader.setSampler(gl, "cubeMap", 0);
-				
-				shader.setUniform(gl, "eta", Scene.singleton.reflector.eta);
-				shader.setUniform(gl, "reflectance", Scene.singleton.reflector.reflectance);
-				
-				float[] camera = Scene.singleton.getCars().get(0).camera.getMatrix();
-				shader.loadMatrix(gl, "cameraMatrix", camera);
+				// this is a bit sketchy since a Reflector is not enabled directly
+				gl.glDisable(GL_LIGHTING);
+				gl.glEnable (GL_BLEND   );
 				
 				if(model != null) model.render(gl);
 				else Renderer.displayColoredObject(gl, geometry, fade);
+				
+				gl.glEnable (GL_LIGHTING);
+				gl.glDisable(GL_BLEND   );
 				
 				Shader.disable(gl);
 			}
@@ -181,41 +172,21 @@ public class SceneNode
 		gl.glPopMatrix();
 	}
 	
-	public void renderColor(GL2 gl, float[] color, Reflector reflector)
+	public void renderColor(GL2 gl, float[] color)
 	{
 		gl.glPushMatrix();
 		{
 			setupMatrix(gl);
 			if(material != null) material.load(gl);
 			
-			Shader shader = Shader.enabled ? (reflector != null ? Shader.get("star_power") : Shader.get("phong")) : null;
-			if(shader != null && reflector != null)
-			{
-				shader.enable(gl);
-				
-				shader.setSampler(gl, "cubeMap", 0);
-				shader.setUniform(gl, "shininess", reflector.reflectivity);
-				
-				float[] camera = Scene.singleton.getCars().get(0).camera.getMatrix();
-				shader.loadMatrix(gl, "cameraMatrix", camera);
-			}
-			
-			int[] attachments = {GL2.GL_COLOR_ATTACHMENT0, GL2.GL_COLOR_ATTACHMENT1};
-			if(!Scene.reflectMode && Scene.singleton.enableBloom) gl.glDrawBuffers(2, attachments, 0);
-			
 			if(model != null)
 			{
-				gl.glColor3fv(color, 0);
-				if(reflector != null) reflector.enable(gl);
+				gl.glColor3f(color[0], color[1], color[2]);
 				model.render(gl);
-				if(reflector != null) reflector.disable(gl);
 			}
 			else Renderer.displayColoredObject(gl, geometry, color);
 			
-			if(!Scene.reflectMode && Scene.singleton.enableBloom) gl.glDrawBuffers(2, attachments, 0);
-			Shader.disable(gl);
-			
-			for(SceneNode child : children) child.renderColor(gl, color, reflector);
+			for(SceneNode child : children) child.renderColor(gl, color);
 		}
 		gl.glPopMatrix();
 	}
@@ -256,7 +227,7 @@ public class SceneNode
 			
 			case S:  gl.glScalef(s.x, s.y, s.z); break;
 			
-			case T_RY_RX_RZ_S:
+			case T_RX_RY_RZ_S:
 			{
 				gl.glTranslatef(t.x, t.y, t.z); 
 				
@@ -298,60 +269,6 @@ public class SceneNode
 		}
 	}
 	
-	public float[] getModelMatrix()
-	{
-		float[] model = Arrays.copyOf(Matrix.IDENTITY_MATRIX_16, 16);
-		
-		switch(order)
-		{
-			case T : Matrix.translate(model, t.x, t.y, t.z); break;
-			
-			case RX: Matrix.multiply (model, model, Matrix.getRotationMatrix(Matrix.getRotationMatrix(r.x,   0,   0))); break;
-			case RY: Matrix.multiply (model, model, Matrix.getRotationMatrix(Matrix.getRotationMatrix(  0, r.y,   0))); break;
-			case RZ: Matrix.multiply (model, model, Matrix.getRotationMatrix(Matrix.getRotationMatrix(  0,   0, r.z))); break;
-			
-			case S:  Matrix.scale    (model, s.x, s.y, s.z); break;
-			
-			case T_RY_RX_RZ_S:
-			{
-				Matrix.translate(model, t.x, t.y, t.z);
-				Matrix.multiply (model, model, Matrix.getRotationMatrix(Matrix.getRotationMatrix(r.x, r.y, r.z)));
-				Matrix.scale    (model, s.x, s.y, s.z);
-				
-				break;
-			}
-			
-			case T_S:
-			{
-				Matrix.translate(model, t.x, t.y, t.z);
-				Matrix.scale    (model, s.x, s.y, s.z);
-				
-				break;
-			}
-			
-			case T_M:
-			{
-				Matrix.translate(model, t.x, t.y, t.z);
-				Matrix.multiply (model, model, orientation);
-				
-				break;
-			}
-			
-			case T_M_S:
-			{
-				Matrix.translate(model, t.x, t.y, t.z);
-				Matrix.multiply (model, model, orientation);
-				Matrix.scale    (model, s.x, s.y, s.z);
-				
-				break;
-			}
-			
-			default : break;
-		}
-		
-		return model;
-	}
-	
 	public float[] getOrientation() { return orientation; }
 
 	public void setOrientation(float[] orientation) { this.orientation = orientation; }
@@ -363,6 +280,8 @@ public class SceneNode
 	public Reflector getReflector() { return reflector; }
 	
 	public void setReflector(Reflector reflector) { this.reflector = reflector; }
+	
+	public void setBloom(boolean bloom) { enableBloom = bloom; }
 
 	public enum MatrixOrder
 	{
@@ -370,7 +289,7 @@ public class SceneNode
 		T,
 		RX, RY, RZ,
 		S,
-		T_RY_RX_RZ_S,
+		T_RX_RY_RZ_S,
 		T_S,
 		T_M, T_M_S;
 	}

@@ -34,6 +34,7 @@ public class BloomStrobe
 	private int rboID; // render buffer object name
 	private int pboID; // pixel buffer object name 
 	
+	private float bloomLimit = 1.0f;
 	private float[][] offsets = new float[4][5 * 5 * 2]; // 5 based on size of gaussian
 	
 	private boolean afterGlowValid = false;
@@ -57,9 +58,13 @@ public class BloomStrobe
 	
 	public void setupShaders(GL2 gl)
 	{
+		Shader ball     = Shader.get("ball");
 		Shader gaussian = Shader.get("gaussian");
 		Shader combine  = Shader.get("combine");
 		Shader show2D   = Shader.get("show_texture");
+		
+		ball.enable(gl);
+	    ball.setUniform(gl, "bloomLimit", bloomLimit);
 	    
 	    gaussian.enable(gl);
 	    gaussian.setSampler(gl, "sampler0", 0);
@@ -81,9 +86,19 @@ public class BloomStrobe
 	public void render(GL2 gl)
 	{
 		setupShaders(gl);
+		
+		// spin objects
+		animationAngle += angleIncrement;
+		if (animationAngle == 360.0f) animationAngle = 0.0f;
+	
+		// slow down over time
+		angleIncrement *= 0.999f;
+		if (Math.abs(angleIncrement) < 0.01f) angleIncrement = 0.0f;
 	
 		// Original Scene + Bright Pass
 		firstPass(gl);
+		
+		gl.glEnable(GL2.GL_BLEND);
 	
 		// Generate mipmaps of the bright pass results:
 		gl.glBindTexture(GL_TEXTURE_2D, textureID[1]);
@@ -98,6 +113,8 @@ public class BloomStrobe
 		gl.glReadPixels(0, 0, fboWidth, fboHeight, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, 0); 
 		gl.glBindBuffer(GL2.GL_PIXEL_PACK_BUFFER, 0);
 		afterGlowValid = true;
+		
+		gl.glDisable(GL2.GL_BLEND);
 	
 		// Reset state
 		Shader.disable(gl);
@@ -133,13 +150,12 @@ public class BloomStrobe
 		scene.renderWorld(gl);
 		scene.render3DModels(gl, car);
 		
-		if(scene.displayLight) for(Light l : scene.lights) l.render(gl);
-		
 		gl.glDrawBuffers(2, attachments, 0);
 		
 		scene.renderParticles(gl, car);
 		Particle.resetTexture();
 		
+		gl.glDrawBuffers(1, attachments, 0);
 		if(scene.enableTerrain) scene.renderFoliage(gl, car);
 		
 		if(terrain != null && terrain.enableWater) 
@@ -211,7 +227,7 @@ public class BloomStrobe
 		gl.glBindBuffer(GL2.GL_PIXEL_UNPACK_BUFFER, pboID);
 		gl.glTexImage2D(GL_TEXTURE_2D, 0, GL2.GL_RGBA8, fboWidth, fboHeight, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, 0);
 		gl.glBindBuffer(GL2.GL_PIXEL_UNPACK_BUFFER, 0);
-		
+//		
 		gl.glActiveTexture(GL_TEXTURE0);
 		
 		updateState(gl);
@@ -343,6 +359,11 @@ public class BloomStrobe
 			gl.glEnd();
 		}
 	}
+
+	private float animationAngle = 0.0f;
+	private float angleIncrement = 4.0f;
+	
+	public void increaseIncrement() { angleIncrement += 2.0f; }
 
 	public void createTexture(GL2 gl)
 	{

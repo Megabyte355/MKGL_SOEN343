@@ -164,7 +164,7 @@ public class Terrain
 		Quadtree base = new Quadtree(210, 32, -10, textures.get(1), 7);
 		base.bumpmap = bumpmaps.get(6);
 		base.caustic = bumpmaps.get(9);
-		base.setHeights(750, 1.25f);
+		base.setHeights(1000, 1.25f);
 		base.specular = new float[] {0.3f, 0.3f, 0.3f, 1};
 		base.enableCaustic = false;
 		
@@ -654,9 +654,8 @@ public class Terrain
 			case KeyEvent.VK_OPEN_BRACKET : tree.decimateAll() ; tree.updateIndices(tree.detail); break;
 			case KeyEvent.VK_CLOSE_BRACKET: tree.subdivideAll(); break;
 			
-			case KeyEvent.VK_I: tree.setMaterial(Material.WET_SAND , textures.get(1), bumpmaps.get( 3)); break;
-			case KeyEvent.VK_U: tree.setMaterial(Material.SOFT_MUD , textures.get(1), bumpmaps.get( 6)); break;
-			case KeyEvent.VK_O: tree.setMaterial(Material.BRIMSTONE, textures.get(3), bumpmaps.get(15)); break;
+			case KeyEvent.VK_I: tree.setMaterial(Material.WET_SAND, bumpmaps.get(3)); break;
+			case KeyEvent.VK_U: tree.setMaterial(Material.SOFT_MUD, bumpmaps.get(6)); break;
 			
 			case KeyEvent.VK_PERIOD: resetQuadtrees(); break;
 			

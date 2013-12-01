@@ -21,8 +21,8 @@ public class Water
 	private float timer = 0;
 	private float increment = 0.05f;
 	
-	public boolean frozen = false;
-	public boolean magma  = false;
+	public boolean frozen = true;
+	public boolean magma = false;
 	
 	public Water(Scene scene)
 	{
@@ -116,7 +116,7 @@ public class Water
 			
 			shader.setUniform(gl, "frozen", frozen);
 			
-			shader.loadModelMatrix(gl, Matrix.IDENTITY_MATRIX_16);
+			shader.loadMatrix(gl, Matrix.IDENTITY_MATRIX_16);
 			// TODO temporary fix, should pass actual camera position to shader
 			shader.setUniform(gl, "cameraPos", p.toArray());
 			

@@ -236,7 +236,7 @@ public class ScalextricScene extends Frame implements GLEventListener, KeyListen
 		gl.glMatrixMode(GL_MODELVIEW);
 
 		setupCamera(gl);
-		light.setup(gl);
+		light.setup(gl, false);
 		
 		if(enableAnimation)
 			if(camera != CameraMode.MODEL_VIEW) car.drive();

@@ -1,35 +1,23 @@
-// ADS Point Lighting
-// Phong Shading
-// Single Texture Map
-// Shadow Mapping
-
 uniform mat4 ModelMatrix;
-
 varying vec4 shadowCoord;
-varying vec3 vNormal;
-varying vec3 lightDir;
-varying vec3 eyeDir;
 
-void main(void) 
-{ 
-	gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;
-    gl_Position = ftransform();
+void main()
+{
+	vec4 ecPosition = gl_ModelViewMatrix * gl_Vertex;
+	vec3 ecPosition3 = (vec3(ecPosition)) / ecPosition.w;
+	vec3 VP = vec3(gl_LightSource[0].position) - ecPosition3;
 	
-    // Get surface normal in eye coordinates
-    vNormal = gl_NormalMatrix * gl_Normal;
-	vNormal = normalize(vNormal);
-
-    // Get vertex position in eye coordinates
-    vec4 position4 = gl_ModelViewMatrix * gl_Vertex;
-    vec3 position3 = vec3(position4) / position4.w;
-    
-    eyeDir = vec3(gl_ModelViewMatrix * gl_Vertex);
-
-    // Get vector to light source
-    lightDir = gl_LightSource[0].position.xyz - position3;
+	VP = normalize(VP);
+	vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
+	float diffuse = max(0.0, dot(normal, VP));
+	diffuse = diffuse + 0.25;
 	
-	gl_FrontColor = gl_Color;
+	//vec4 texCoord = gl_TextureMatrix[2] * (gl_ModelViewMatrix * gl_Vertex);
+	vec4 texCoord = gl_TextureMatrix[2] * (ModelMatrix * gl_Vertex);
+	//vec4 texCoord = gl_TextureMatrix[2] * gl_Vertex;
+	//shadowCoord = texCoord / texCoord.w;
+	shadowCoord = texCoord;
 	
-	shadowCoord = gl_TextureMatrix[2] * (ModelMatrix * gl_Vertex);
-	gl_TexCoord[0] = gl_MultiTexCoord0;
+	gl_FrontColor = vec4(diffuse * gl_Color.rgb, gl_Color.a);
+	gl_Position = ftransform();
 }

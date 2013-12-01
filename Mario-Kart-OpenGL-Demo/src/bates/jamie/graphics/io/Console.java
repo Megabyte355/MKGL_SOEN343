@@ -2,7 +2,6 @@ package bates.jamie.graphics.io;
 
 
 import java.awt.Color;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -17,10 +16,7 @@ import bates.jamie.graphics.item.FakeItemBox;
 import bates.jamie.graphics.item.GreenShell;
 import bates.jamie.graphics.item.Item;
 import bates.jamie.graphics.item.RedShell;
-import bates.jamie.graphics.particle.Blizzard;
-import bates.jamie.graphics.particle.Blizzard.StormType;
 import bates.jamie.graphics.particle.ParticleGenerator;
-import bates.jamie.graphics.scene.Light;
 import bates.jamie.graphics.scene.Scene;
 import bates.jamie.graphics.util.Vec3;
 
@@ -66,8 +62,6 @@ public class Console
 			else if(_cmd.equalsIgnoreCase(  "weather")) parseWeather(cmd);
 			else if(_cmd.equalsIgnoreCase(   "shadow")) parseShadow(cmd);
 			else if(_cmd.equalsIgnoreCase(    "grass")) parseGrass(cmd); 
-			else if(_cmd.equalsIgnoreCase(   "effect")) parseEffect(cmd);
-			else if(_cmd.equalsIgnoreCase(    "water")) parseWater(cmd); 
 		}
 		catch(Exception e)
 		{
@@ -75,40 +69,6 @@ public class Console
 		}
 
 		cmd.close();
-	}
-	
-	private void parseWater(Scanner cmd)
-	{
-		String _cmd = cmd.next();
-		
-	         if(_cmd.equalsIgnoreCase("magma")) scene.water.magma = cmd.nextBoolean();
-	}
-	
-	private void parseEffect(Scanner cmd)
-	{
-		String _cmd = cmd.next();
-		
-	         if(_cmd.equalsIgnoreCase("bloom")) scene.enableBloom = cmd.nextBoolean();
-	    else if(_cmd.equalsIgnoreCase("focalblur")) Scene.enableFocalBlur = cmd.nextBoolean();
-	    else if(_cmd.equalsIgnoreCase("radialblur")) parseRadial(cmd);    
-	    else if(_cmd.equalsIgnoreCase("mirage"))
-	    {
-	    	boolean enabled = cmd.nextBoolean();
-	    	if(enabled) Scene.enableFocalBlur = true;
-	    	scene.focalBlur.enableMirage = enabled;
-	    }
-	}
-	
-	private void parseRadial(Scanner cmd)
-	{
-		String _cmd = cmd.next();
-		
-	         if(_cmd.equalsIgnoreCase(   "decay")) scene.focalBlur.decay    = cmd.nextFloat();
-	    else if(_cmd.equalsIgnoreCase("exposure")) scene.focalBlur.exposure = cmd.nextFloat();
-	    else if(_cmd.equalsIgnoreCase( "density")) scene.focalBlur.density  = cmd.nextFloat();
-	    else if(_cmd.equalsIgnoreCase(  "weight")) scene.focalBlur.weight   = cmd.nextFloat();
-	         
-	    else if(_cmd.equalsIgnoreCase( "samples")) scene.focalBlur.samples = cmd.nextInt();
 	}
 	
 	private void parseGrass(Scanner cmd)
@@ -159,7 +119,6 @@ public class Console
 		else if(_cmd.equalsIgnoreCase(       "lod")) tree.detail = cmd.nextInt();
 		else if(_cmd.equalsIgnoreCase(   "texture")) tree.scaleTexture(cmd.nextFloat());
 		else if(_cmd.equalsIgnoreCase("elasticity")) tree.elasticity = cmd.nextFloat();
-		else if(_cmd.equalsIgnoreCase(  "caustics")) tree.enableCaustic = cmd.nextBoolean();    
 		else if(_cmd.equalsIgnoreCase( "translate"))
 		{
 			float x = cmd.nextFloat();
@@ -180,17 +139,6 @@ public class Console
 			scene.flakeLimit = limit;
 			if(scene.blizzard != null) scene.blizzard.setLimit(limit);
 		}
-		else if(_cmd.equalsIgnoreCase("none")) scene.enableBlizzard = false;
-		else if(_cmd.equalsIgnoreCase("snow"))
-		{	
-			scene.enableBlizzard = true;
-			scene.blizzard = new Blizzard(scene, scene.flakeLimit, new Vec3(0.2f, -1.5f, 0.1f), StormType.SNOW);
-		}
-		else if(_cmd.equalsIgnoreCase("rain"))
-		{	
-			scene.enableBlizzard = true;
-			scene.blizzard = new Blizzard(scene, scene.flakeLimit, new Vec3(0.0f, -4.0f, 0.0f), StormType.RAIN);
-		}
 	}
 	
 	private void parseShadow(Scanner cmd)
@@ -198,7 +146,6 @@ public class Console
 		String _cmd = cmd.next();
 		
 		if(_cmd.equalsIgnoreCase("offset")) scene.caster.shadowOffset = cmd.nextFloat();
-		else if(_cmd.equalsIgnoreCase("enabled")) Scene.enableShadow = cmd.nextBoolean();
 	}
 	
 	private void parseWireframe(Scanner cmd)
@@ -287,13 +234,7 @@ public class Console
 	
 	private void parsePress(Scanner cmd)
 	{
-		String _cmd = cmd.next();
-		
-		int modifier = 0;
-		
-		if(_cmd.equalsIgnoreCase("shift")) modifier = KeyEvent.SHIFT_DOWN_MASK;
-		
-		scene.keyPressed(scene.pressKey(_cmd.charAt(0), modifier));
+		scene.keyPressed(scene.pressKey(cmd.next().charAt(0)));
 	}
 	
 	private void parseProfile(Scanner cmd)
@@ -307,8 +248,6 @@ public class Console
 			while(sc.hasNextLine()) parseCommand(sc.nextLine());
 			
 			sc.close();
-			
-			scene.setCheckBoxes();
 		}
 		catch (IOException e) { e.printStackTrace(); }
 	}
@@ -326,12 +265,11 @@ public class Console
 		
 		     if(_cmd.equalsIgnoreCase(        "fog")) parseFog(cmd);
 		else if(_cmd.equalsIgnoreCase(      "light")) parseLight(cmd);
-		else if(_cmd.equalsIgnoreCase(     "lights")) parseLights(cmd);
 		else if(_cmd.equalsIgnoreCase(    "display")) parseDisplay(cmd);
 		else if(_cmd.equalsIgnoreCase(    "culling")) scene.enableCulling = cmd.nextBoolean();   
 		else if(_cmd.equalsIgnoreCase(        "fov")) scene.fov = cmd.nextFloat();
 		else if(_cmd.equalsIgnoreCase(    "opacity")) scene.opacity = cmd.nextFloat();
-		else if(_cmd.equalsIgnoreCase(  "reflector")) parseReflector(cmd);    
+		else if(_cmd.equalsIgnoreCase(  "reflector")) scene.reflector.reflectivity = cmd.nextFloat();    
 		else if(_cmd.equalsIgnoreCase(    "terrain"))
 		{
 			scene.enableTerrain = cmd.nextBoolean();
@@ -346,31 +284,7 @@ public class Console
 			
 			scene.background = new float[] {r, g, b};
 		}
-		else if(_cmd.equalsIgnoreCase("sky"))
-		{
-			float r = cmd.nextFloat();
-			float g = cmd.nextFloat();
-			float b = cmd.nextFloat();
-			
-			scene.skybox.setSkyColor(new float[] {r, g, b});
-		}
-		else if(_cmd.equalsIgnoreCase("horizon"))
-		{
-			float r = cmd.nextFloat();
-			float g = cmd.nextFloat();
-			float b = cmd.nextFloat();
-			
-			scene.skybox.setHorizonColor(new float[] {r, g, b});
-		} 
-	}
-	
-	private void parseReflector(Scanner cmd)
-	{
-		String _cmd = cmd.next();
-		
-		     if(_cmd.equalsIgnoreCase("reflectivity")) scene.reflector.reflectivity = cmd.nextFloat();
-		else if(_cmd.equalsIgnoreCase(         "eta")) scene.reflector.setRefractionIndex(cmd.nextFloat());
-		else if(_cmd.equalsIgnoreCase(  "resolution")) scene.reflector.updateSize(cmd.nextInt());
+		else if(_cmd.equalsIgnoreCase("attenuation")) Scene.attenuation = cmd.nextFloat();  
 	}
 	
 	private void parseLight(Scanner cmd)
@@ -399,62 +313,14 @@ public class Console
 		}
 		else if(_cmd.equalsIgnoreCase("shininess")) scene.light.setShininess(cmd.nextInt());
 		else if(_cmd.equalsIgnoreCase( "parallel")) scene.light.parallel = cmd.nextBoolean();
-		
-		else if(_cmd.equalsIgnoreCase( "constant")) scene.light.setConstantAttenuation (cmd.nextFloat());
-		else if(_cmd.equalsIgnoreCase(   "linear")) scene.light.setLinearAttenuation   (cmd.nextFloat());
-		else if(_cmd.equalsIgnoreCase("quadratic")) scene.light.setQuadraticAttenuation(cmd.nextFloat());
-		
-	}
-	
-	private void parseLights(Scanner cmd)
-	{
-		String _cmd = cmd.next();
-		
-		if(_cmd.equalsIgnoreCase("ambience"))
-		{
-			float r = cmd.nextFloat();
-			float g = cmd.nextFloat();
-			float b = cmd.nextFloat();
-			
-			float a = cmd.hasNextFloat() ? cmd.nextFloat() : 1.0f;
-			
-			for(Light l : scene.lights) l.setAmbience(new float[] {r, g, b, a});
-		}
-		else if(_cmd.equalsIgnoreCase("diffuse"))
-		{
-			float r = cmd.nextFloat();
-			float g = cmd.nextFloat();
-			float b = cmd.nextFloat();
-			
-			float a = cmd.hasNextFloat() ? cmd.nextFloat() : 1.0f;
-			
-			for(Light l : scene.lights) l.setDiffuse(new float[] {r, g, b, a});
-		}
-		else if(_cmd.equalsIgnoreCase("specular"))
-		{
-			float r = cmd.nextFloat();
-			float g = cmd.nextFloat();
-			float b = cmd.nextFloat();
-			
-			float a = cmd.hasNextFloat() ? cmd.nextFloat() : 1.0f;
-			
-			for(Light l : scene.lights) l.setSpecular(new float[] {r, g, b, a});
-		}
-		
-		else if(_cmd.equalsIgnoreCase( "constant")) { float c = cmd.nextFloat(); for(Light light : scene.lights) light.setConstantAttenuation (c); }
-		else if(_cmd.equalsIgnoreCase(   "linear")) { float l = cmd.nextFloat(); for(Light light : scene.lights) light.setLinearAttenuation   (l); }
-		else if(_cmd.equalsIgnoreCase("quadratic")) { float q = cmd.nextFloat(); for(Light light : scene.lights) light.setQuadraticAttenuation(q); }
-		else if(_cmd.equalsIgnoreCase("attenuate")) { boolean attenuate = cmd.nextBoolean(); for(Light light : scene.lights) light.enableAttenuation = attenuate; }
 	}
 	
 	private void parseDisplay(Scanner cmd)
 	{
 		String _cmd = cmd.next();
 		
-		     if(_cmd.equalsIgnoreCase(   "fort")) scene.fort.displayModel = cmd.nextBoolean();
-		else if(_cmd.equalsIgnoreCase( "skybox")) scene.displaySkybox = cmd.nextBoolean();
-		else if(_cmd.equalsIgnoreCase("foliage")) scene.enableFoliage = cmd.nextBoolean(); 
-		else if(_cmd.equalsIgnoreCase(  "water")) scene.getTerrain().enableWater = cmd.nextBoolean();     
+		     if(_cmd.equalsIgnoreCase(  "fort")) scene.fort.displayModel = cmd.nextBoolean();
+		else if(_cmd.equalsIgnoreCase("skybox")) scene.displaySkybox = cmd.nextBoolean();
 	}
 	
 	private void parseFog(Scanner cmd)
@@ -496,7 +362,7 @@ public class Console
 		String _cmd = cmd.next();
 		
 		     if(_cmd.equalsIgnoreCase("item")) parseAddItem(cmd);
-		else if(_cmd.equalsIgnoreCase( "box")) parseAddBox (cmd);
+		else if(_cmd.equalsIgnoreCase("box"))  parseAddBox(cmd);
 	}
 	
 	private void parseAddBox(Scanner cmd)

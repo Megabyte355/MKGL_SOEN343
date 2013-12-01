@@ -50,20 +50,13 @@ public class Shader
 		
 		// load and compile shaders from file
 		Shader phong        = new Shader(gl, "phong", "phong");
-		Shader phongLights  = new Shader(gl, "phong_lights", "phong_lights");
 		Shader phongTexture = new Shader(gl, "phong_texture", "phong_texture");
-		Shader phongAlpha   = new Shader(gl, "phong_texture", "phong_alpha");
-		Shader texLights    = new Shader(gl, "texture_lights", "texture_lights");
 		Shader bump         = new Shader(gl, "bump", "bump", attributes);
-		Shader bumpLights   = new Shader(gl, "bump_lights", "bump_lights", attributes);
 		Shader shadow       = new Shader(gl, "shadow", "shadow");
 		Shader phongShadow  = new Shader(gl, "phong_shadow", "phong_shadow");
-		Shader shadowLights = new Shader(gl, "shadow_lights", "shadow_lights");
 		Shader phongCube    = new Shader(gl, "phong_cube", "phong_cube");
-		Shader cubeLights   = new Shader(gl, "cube_lights", "cube_lights");
 		Shader aberration   = new Shader(gl, "aberration", "aberration");
 		Shader ghost        = new Shader(gl, "ghost", "ghost");
-		Shader starPower    = new Shader(gl, "phong_cube", "star_cube");
 		Shader water        = new Shader(gl, "water", "water", attributes);
 		Shader magma        = new Shader(gl, "water", "magma", attributes);
 		Shader caustics     = new Shader(gl, "water_caustics", "water_caustics", attributes);
@@ -72,29 +65,22 @@ public class Shader
 		Shader grass        = new Shader(gl, "grass", "grass");
 		Shader dissolve     = new Shader(gl, "dissolve", "dissolve");
 		
+		Shader ball         = new Shader(gl, "hdr_ball", "hdr_ball");
 		Shader gaussian     = new Shader(gl, "show_texture", "gaussian");
 		Shader depthField   = new Shader(gl, "show_texture", "depth_field");
 		Shader mirage       = new Shader(gl, "show_texture", "mirage");
 		Shader combine      = new Shader(gl, "show_texture", "combine");
 		Shader showTexture  = new Shader(gl, "show_texture", "show_texture");
-		Shader crepuscular  = new Shader(gl, "crepuscular", "crepuscular");
 		
 		// check that shaders have been compiled and linked correctly before hashing 
 		if(       phong.isValid()) shaders.put("phong", phong);
-		if( phongLights.isValid()) shaders.put("phong_lights", phongLights);
 		if(phongTexture.isValid()) shaders.put("phong_texture", phongTexture);
-		if(  phongAlpha.isValid()) shaders.put("phong_alpha", phongAlpha);
-		if(   texLights.isValid()) shaders.put("texture_lights", texLights);
 		if(        bump.isValid()) shaders.put("bump", bump);
-		if(  bumpLights.isValid()) shaders.put("bump_lights", bumpLights);
 		if(      shadow.isValid()) shaders.put("shadow", shadow);
 		if( phongShadow.isValid()) shaders.put("phong_shadow", phongShadow);
-		if(shadowLights.isValid()) shaders.put("shadow_lights", shadowLights);
 		if(   phongCube.isValid()) shaders.put("phong_cube", phongCube);
-		if(  cubeLights.isValid()) shaders.put("cube_lights", cubeLights);
 		if(  aberration.isValid()) shaders.put("aberration", aberration);
 		if(       ghost.isValid()) shaders.put("ghost", ghost);
-		if(   starPower.isValid()) shaders.put("star_power", starPower);
 		if(       water.isValid()) shaders.put("water", water);
 		if(       magma.isValid()) shaders.put("magma", magma);
 		if(    caustics.isValid()) shaders.put("water_caustics", caustics);
@@ -103,12 +89,12 @@ public class Shader
 		if(       grass.isValid()) shaders.put("grass", grass);
 		if(    dissolve.isValid()) shaders.put("dissolve", dissolve);
 		
+		if(        ball.isValid()) shaders.put("ball", ball);
 		if(    gaussian.isValid()) shaders.put("gaussian", gaussian);
 		if(  depthField.isValid()) shaders.put("depth_field", depthField);
 		if(      mirage.isValid()) shaders.put("heat_haze", mirage);
 		if(     combine.isValid()) shaders.put("combine", combine);
 		if( showTexture.isValid()) shaders.put("show_texture", showTexture);
-		if( crepuscular.isValid()) shaders.put("crepuscular", crepuscular);
 	}
 	
 	public static Shader get(String name) { return shaders.get(name); }
@@ -278,15 +264,9 @@ public class Shader
 		}
 	}
 	
-	public void loadModelMatrix(GL2 gl, float[] matrix)
+	public void loadMatrix(GL2 gl, float[] matrix)
 	{
 		int modelMatrix = gl.glGetUniformLocation(shaderID, "ModelMatrix");
 		gl.glUniformMatrix4fv(modelMatrix, 1, false, matrix, 0);
-	}
-	
-	public void loadMatrix(GL2 gl, String uniform, float[] matrix)
-	{
-		int matrixID = gl.glGetUniformLocation(shaderID, uniform);
-		gl.glUniformMatrix4fv(matrixID, 1, false, matrix, 0);
 	}
 }
