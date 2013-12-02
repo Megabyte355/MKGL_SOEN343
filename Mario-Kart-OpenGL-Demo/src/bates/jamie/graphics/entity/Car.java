@@ -1511,6 +1511,42 @@ public class Car
 		scene.addParticle(new LightningParticle(source));
 	}
 	
+	public boolean getStarPower() {
+		return starPower;
+	}
+	
+	public boolean getInvisible() {
+		return invisible;
+	}
+	
+	public boolean getMiniature() {
+		return miniature;
+	}
+	
+	public void setMiniature(boolean value) {
+		miniature = value;
+	}
+	
+	public float getScale() {
+		return scale;
+	}
+	
+	public void setScale(Float value) {
+		scale = value;
+	}
+	
+	public boolean getSlipping() {
+		return slipping;
+	}
+	
+	public void setMiniatureDuration(int value) {
+		miniatureDuration = value;
+	}
+	
+	public void setSlipDuration(int value) {
+		slipDuration += value;
+	}
+	
 	public void curse()
 	{
 		cursed = true;
@@ -1523,6 +1559,10 @@ public class Car
 		invisible = true;
 		booDuration = 400;
 	}
+	
+	public void setInvisible(boolean value) {
+		invisible = value;
+	}
 
 	public void usePowerStar()
 	{
@@ -1530,6 +1570,22 @@ public class Car
 		cursed = false;
 		starDuration = 500;
 		turnIncrement = 0.15f;
+	}
+	
+	public void setStarPower(boolean value) {
+		starPower = value;
+	}
+	
+	public void setCursed(boolean value) {
+		cursed = value;
+	}
+	
+	public void setStarDuration(int value) {
+		starDuration = value;
+	}
+	
+	public void setTurnIncrement(float value) {
+		turnIncrement = value;
 	}
 	
 	public boolean isSlipping()   { return slipping;  }
